@@ -92,20 +92,16 @@ def main():
         st.subheader("Recently Detected Birds")
         birds_placeholder = st.empty()
 
-    # Initialize models if starting
+    # Initialize models if running
     if st.session_state.running:
         initialize_models()
 
-        # Main detection loop
-        while st.session_state.running:
-            # Read frame from webcam
-            success, frame = st.session_state.webcam.read_frame()
-            
-            if not success or frame is None:
-                status_placeholder.error("Failed to read frame from webcam")
-                time.sleep(0.1)
-                continue
-
+        # Read frame from webcam
+        success, frame = st.session_state.webcam.read_frame()
+        
+        if not success or frame is None:
+            status_placeholder.error("Failed to read frame from webcam")
+        else:
             # Detect birds in the frame
             has_birds, detections, annotated_frame = st.session_state.detector.detect_birds(frame)
 
@@ -142,45 +138,47 @@ def main():
                         bird_record["image_path"] = image_path
                     
                     # Add to detected birds (avoid duplicates in quick succession)
-                    # Only add if not detected in the last 2 seconds
+                    # Check if any recent detection (within last 2 seconds) is the same species
                     should_add = True
-                    if st.session_state.detected_birds:
-                        last_detection = st.session_state.detected_birds[0]
-                        time_diff = (bird_record["timestamp"] - last_detection["timestamp"]).total_seconds()
-                        if time_diff < 2.0 and species == last_detection["species"]:
+                    current_time = bird_record["timestamp"]
+                    for recent_bird in st.session_state.detected_birds[:3]:  # Check last 3 detections
+                        time_diff = (current_time - recent_bird["timestamp"]).total_seconds()
+                        if time_diff < 2.0 and species == recent_bird["species"]:
                             should_add = False
+                            break
                     
                     if should_add:
                         st.session_state.detected_birds.insert(0, bird_record)
-                        # Keep only last 20 detections
-                        st.session_state.detected_birds = st.session_state.detected_birds[:20]
+                        # Keep only last 50 detections
+                        st.session_state.detected_birds = st.session_state.detected_birds[:50]
             else:
                 status_placeholder.info("No birds detected. Keep watching...")
 
-            # Display detected birds list
-            with birds_placeholder.container():
-                if st.session_state.detected_birds:
-                    for idx, bird in enumerate(st.session_state.detected_birds[:10]):  # Show top 10
-                        with st.container():
-                            col_a, col_b = st.columns([1, 2])
-                            
-                            with col_a:
-                                # Display bird image
-                                bird_img_rgb = convert_cv2_to_rgb(bird["image"])
-                                st.image(bird_img_rgb, use_container_width=True)
-                            
-                            with col_b:
-                                st.markdown(f"**{bird['species']}**")
-                                st.caption(f"Confidence: {bird['confidence']:.2%}")
-                                st.caption(bird["timestamp"].strftime("%H:%M:%S"))
-                            
-                            if idx < len(st.session_state.detected_birds) - 1:
-                                st.divider()
-                else:
-                    st.info("No birds detected yet. Start detection to begin watching!")
+        # Display detected birds list
+        with birds_placeholder.container():
+            if st.session_state.detected_birds:
+                for idx, bird in enumerate(st.session_state.detected_birds[:10]):  # Show top 10
+                    with st.container():
+                        col_a, col_b = st.columns([1, 2])
+                        
+                        with col_a:
+                            # Display bird image
+                            bird_img_rgb = convert_cv2_to_rgb(bird["image"])
+                            st.image(bird_img_rgb, use_container_width=True)
+                        
+                        with col_b:
+                            st.markdown(f"**{bird['species']}**")
+                            st.caption(f"Confidence: {bird['confidence']:.2%}")
+                            st.caption(bird["timestamp"].strftime("%H:%M:%S"))
+                        
+                        if idx < min(len(st.session_state.detected_birds), 10) - 1:
+                            st.divider()
+            else:
+                st.info("No birds detected yet. Start detection to begin watching!")
 
-            # Small delay to control frame rate
-            time.sleep(0.05)
+        # Auto-refresh to continue detection
+        time.sleep(0.1)  # Small delay to avoid overwhelming the system
+        st.rerun()
     else:
         # Show placeholder when not running
         video_placeholder.info("Click 'Start Detection' to begin watching for birds")

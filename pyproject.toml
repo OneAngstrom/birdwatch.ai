@@ -1,7 +1,7 @@
 [project]
 name = "birdwatch-ai"
 version = "0.1.0"
-description = "Python app that recognises birds from a connected webcam"
+description = "Python app that recognizes birds from a connected webcam"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
