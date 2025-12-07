@@ -114,7 +114,7 @@ def main():
             video_placeholder.image(
                 convert_cv2_to_rgb(display_frame),
                 channels="RGB",
-                use_column_width=True,
+                use_container_width=True,
             )
 
             # Process detected birds
@@ -167,7 +167,7 @@ def main():
                             with col_a:
                                 # Display bird image
                                 bird_img_rgb = convert_cv2_to_rgb(bird["image"])
-                                st.image(bird_img_rgb, use_column_width=True)
+                                st.image(bird_img_rgb, use_container_width=True)
                             
                             with col_b:
                                 st.markdown(f"**{bird['species']}**")
@@ -197,7 +197,7 @@ def main():
                         with col_a:
                             try:
                                 img = Image.open(bird["image_path"])
-                                st.image(img, use_column_width=True)
+                                st.image(img, use_container_width=True)
                             except Exception:
                                 st.write("Image not available")
                         

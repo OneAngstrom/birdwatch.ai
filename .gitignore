@@ -208,3 +208,4 @@ __marimo__/
 
 # Birdwatch.ai specific
 data/detected_birds/
+*.pt  # PyTorch model files (downloaded by ultralytics)
