@@ -83,9 +83,12 @@ class WebcamCapture:
         # Create a frame with gradient background
         frame = np.zeros((FRAME_HEIGHT, FRAME_WIDTH, 3), dtype=np.uint8)
         
-        # Add gradient
+        # Add gradient (ensure values don't overflow uint8)
         for i in range(FRAME_HEIGHT):
-            frame[i, :] = [50 + i // 3, 100 + i // 5, 150 + i // 4]
+            b = min(255, 50 + i // 3)
+            g = min(255, 100 + i // 5)
+            r = min(255, 150 + i // 4)
+            frame[i, :] = [b, g, r]
         
         # Add text
         text = "No Camera Connected - Demo Mode"
